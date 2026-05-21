@@ -1,7 +1,136 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Users, Activity, BarChart, HardDrive } from 'lucide-react';
+import { ShieldCheck, Users, Activity, BarChart, HardDrive, Terminal } from 'lucide-react';
 import WalletStatus from './WalletStatus';
+import { getTelemetryMetrics } from '../gasless/sponsorUtils';
+
+function UGFTelemetryCard() {
+  const [metrics, setMetrics] = useState({
+    sponsorBalance: 1250.00,
+    totalGasSaved: 148.52,
+    gaslessTxCount: 120,
+    logs: []
+  });
+  const [flashBalance, setFlashBalance] = useState(false);
+  const [flashSavings, setFlashSavings] = useState(false);
+
+  useEffect(() => {
+    // Load initial metrics
+    setMetrics(getTelemetryMetrics());
+
+    // Listen to updates
+    const handleUpdate = () => {
+      const newMetrics = getTelemetryMetrics();
+      
+      // Determine what changed to trigger animations
+      if (newMetrics.sponsorBalance !== metrics.sponsorBalance) {
+        setFlashBalance(true);
+        setTimeout(() => setFlashBalance(false), 800);
+      }
+      if (newMetrics.totalGasSaved !== metrics.totalGasSaved) {
+        setFlashSavings(true);
+        setTimeout(() => setFlashSavings(false), 800);
+      }
+      
+      setMetrics(newMetrics);
+    };
+
+    window.addEventListener('cc-telemetry-update', handleUpdate);
+
+    // Periodic live log simulation to keep the UI feeling "alive"
+    const liveSimulationLogList = [
+      `[UGF-ROUTING] Live relay status: ACTIVE (Latency: 11ms)`,
+      `[UGF-QUOTE] Fetched gas estimate for Base Sepolia: 0.042 Mock USD`,
+      `[UGF-SPONSOR] Audited relayer balances: 100% solvency ratio`,
+      `[UGF-RELAY] Heartbeat ping verified from relayer group #4`,
+      `[UGF-ACCOUNTING] Real-time mock USD accounting verified`,
+      `[UGF-CONSENSUS] Pipeline synchronizing with block indexer`
+    ];
+
+    const interval = setInterval(() => {
+      const randomLog = liveSimulationLogList[Math.floor(Math.random() * liveSimulationLogList.length)];
+      const timestamp = new Date().toLocaleTimeString();
+      setMetrics(prev => {
+        const updatedLogs = [`[${timestamp}] ${randomLog}`, ...prev.logs].slice(0, 40);
+        return { ...prev, logs: updatedLogs };
+      });
+    }, 12000);
+
+    return () => {
+      window.removeEventListener('cc-telemetry-update', handleUpdate);
+      clearInterval(interval);
+    };
+  }, [metrics.sponsorBalance, metrics.totalGasSaved]);
+
+  const parseLogPrefix = (log) => {
+    if (log.includes('[UGF-QUOTE]')) return { prefix: '[UGF-QUOTE]', content: log.split('[UGF-QUOTE]')[1], color: 'text-cyan-400' };
+    if (log.includes('[UGF-SPONSOR]')) return { prefix: '[UGF-SPONSOR]', content: log.split('[UGF-SPONSOR]')[1], color: 'text-emerald-400 font-semibold' };
+    if (log.includes('[UGF-BROADCAST]')) return { prefix: '[UGF-BROADCAST]', content: log.split('[UGF-BROADCAST]')[1], color: 'text-indigo-400' };
+    if (log.includes('[UGF-SETTLED]')) return { prefix: '[UGF-SETTLED]', content: log.split('[UGF-SETTLED]')[1], color: 'text-purple-400' };
+    if (log.includes('[UGF-CONSENSUS]')) return { prefix: '[UGF-CONSENSUS]', content: log.split('[UGF-CONSENSUS]')[1], color: 'text-yellow-400/90' };
+    if (log.includes('[UGF-RELAY]')) return { prefix: '[UGF-RELAY]', content: log.split('[UGF-RELAY]')[1], color: 'text-blue-400' };
+    if (log.includes('[UGF-ROUTING]')) return { prefix: '[UGF-ROUTING]', content: log.split('[UGF-ROUTING]')[1], color: 'text-slate-400' };
+    if (log.includes('[UGF-ACCOUNTING]')) return { prefix: '[UGF-ACCOUNTING]', content: log.split('[UGF-ACCOUNTING]')[1], color: 'text-pink-400' };
+    return { prefix: '', content: log, color: 'text-slate-300' };
+  };
+
+  return (
+    <div className="glass-card p-6 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col justify-between h-full min-h-[350px]">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-blue-500 opacity-30" />
+      
+      {/* Card Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-5 h-5 text-cyan-400" />
+          <h4 className="font-semibold text-white text-sm tracking-wide font-display uppercase">UGF Gasless Telemetry</h4>
+        </div>
+        <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+          <span className="text-[10px] text-emerald-400 font-mono font-semibold uppercase tracking-wider">Active</span>
+        </div>
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col justify-center">
+          <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-500 block mb-1">Sponsor Pool</span>
+          <span className={`text-sm sm:text-base font-extrabold font-mono text-white transition-all duration-500 ${
+            flashBalance ? 'text-emerald-400 scale-105' : ''
+          }`}>
+            ${metrics.sponsorBalance.toFixed(2)}
+          </span>
+        </div>
+        <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col justify-center">
+          <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-500 block mb-1">Gas Saved</span>
+          <span className={`text-sm sm:text-base font-extrabold font-mono text-white transition-all duration-500 ${
+            flashSavings ? 'text-cyan-400 scale-105' : ''
+          }`}>
+            ${metrics.totalGasSaved.toFixed(2)}
+          </span>
+        </div>
+        <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col justify-center">
+          <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-500 block mb-1">Sponsored Tx</span>
+          <span className="text-sm sm:text-base font-extrabold font-mono text-cyan-400">
+            {metrics.gaslessTxCount}
+          </span>
+        </div>
+      </div>
+
+      {/* Logs Terminal */}
+      <div className="flex-1 min-h-[140px] bg-black/40 border border-white/5 rounded-xl p-3 font-mono text-[10px] overflow-y-auto space-y-1.5 max-h-[160px] scrollbar-thin">
+        {metrics.logs.map((log, idx) => {
+          const parsed = parseLogPrefix(log);
+          return (
+            <div key={idx} className="leading-relaxed break-all">
+              <span className={parsed.color}>{parsed.prefix}</span>
+              <span className="text-slate-300">{parsed.content}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function StatsSection() {
   const [recordsCount, setRecordsCount] = useState(1248392);
@@ -148,9 +277,10 @@ export default function StatsSection() {
 
         </div>
 
-        {/* Reusable Wallet Status Console Component */}
-        <div className="mt-12 max-w-xl mx-auto">
+        {/* Reusable Wallet Status and UGF Telemetry Consoles */}
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <WalletStatus />
+          <UGFTelemetryCard />
         </div>
 
       </div>

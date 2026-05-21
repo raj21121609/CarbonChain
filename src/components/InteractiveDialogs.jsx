@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, ShieldAlert, Cpu, Database, Send, Clipboard, ExternalLink, Leaf } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { esgContractConfig } from '../web3/mintCredential';
+import { esgContractConfig, ESG_CREDENTIAL_ADDRESS } from '../web3/mintCredential';
 import { getTxExplorerUrl } from '../web3/chainUtils';
+import { useUGFModal } from '@tychilabs/react-ugf';
+import { useEthersSigner, encodeMintData } from '../gasless/ugfHelpers';
+import { recordGaslessMint } from '../gasless/sponsorUtils';
 
 export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
   const { address, isConnected, chain } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const signer = useEthersSigner();
+  const { openUGF, result } = useUGFModal();
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -22,17 +27,78 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
   const [txError, setTxError] = useState(null);
   const [txHash, setTxHash] = useState('');
   const [mintedTokenId, setMintedTokenId] = useState(null);
+  const [isGasless, setIsGasless] = useState(true);
 
   const { data: receipt, error: receiptError, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   });
 
-  const syncMessages = [
+  const standardSyncMessages = [
     { title: "Validating Metadata", desc: "Computing cryptographic hashes of ESG credentials..." },
     { title: "Requesting Signature", desc: "Please confirm the mint transaction in your browser wallet..." },
     { title: "Broadcasting to Base Sepolia", desc: "Awaiting block confirmation on the decentralized ledger..." },
     { title: "Securing Credentials", desc: "Minting soulbound token and writing proof to chain..." }
   ];
+
+  const gaslessSyncMessages = [
+    { title: "Preparing Gasless Transaction", desc: "Computing payload hashes and gas sponsorships..." },
+    { title: "Securing UGF Sponsorship", desc: "Opening UGF Gasless Portal. Please sign transaction in wallet..." },
+    { title: "Executing Onchain", desc: "Broadcasting sponsored transaction to Base Sepolia ledger..." },
+    { title: "Finalizing ESG Credential", desc: "Awaiting block confirmation and indexer security check..." }
+  ];
+
+  const syncMessages = isGasless ? gaslessSyncMessages : standardSyncMessages;
+
+  // Refs to mitigate state stale closure and prevent race conditions
+  const txHashRef = useRef('');
+  const resultRef = useRef(null);
+  const lastProcessedHash = useRef(null);
+
+  useEffect(() => {
+    txHashRef.current = txHash;
+  }, [txHash]);
+
+  useEffect(() => {
+    resultRef.current = result;
+  }, [result]);
+
+  // Watch if the UGF Modal is closed by the user
+  useEffect(() => {
+    if (step === 'syncing' && syncStep === 1 && isGasless) {
+      let modalOpenedSeen = false;
+      const interval = setInterval(() => {
+        const modalDom = document.querySelector('div[style*="zIndex: 9999"]');
+        if (modalDom) {
+          modalOpenedSeen = true;
+        }
+        
+        // Safely access current values from refs to avoid stale state check race condition
+        const currentTxHash = txHashRef.current;
+        const currentResult = resultRef.current;
+        const previousHash = lastProcessedHash.current;
+
+        // If modal disappears, check if we have received a new transaction hash
+        const hasNewHash = currentTxHash || (currentResult?.txHash && currentResult.txHash !== previousHash);
+
+        // Only propagate a cancel error if the modal has actually been seen mounted/open at least once
+        if (modalOpenedSeen && !modalDom && !hasNewHash) {
+          setTxError("UGF Sponsorship request closed or canceled.");
+          setStep('form');
+        }
+      }, 500); // Check faster to respond quicker
+      return () => clearInterval(interval);
+    }
+  }, [step, syncStep, isGasless]);
+
+  // Watch for UGF gasless completion
+  useEffect(() => {
+    if (result && result.txHash && step === 'syncing' && isGasless) {
+      if (result.txHash !== lastProcessedHash.current) {
+        setTxHash(result.txHash);
+        setSyncStep(2); // Executing Onchain
+      }
+    }
+  }, [result, step, isGasless]);
 
   // Watch for block confirmation
   useEffect(() => {
@@ -40,9 +106,6 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
       let tokenId = '0';
       if (receipt.logs && receipt.logs.length > 0) {
         try {
-          // Find ERC721 Transfer event
-          // Transfer (index_topic_1 address from, index_topic_2 address to, index_topic_3 uint256 tokenId)
-          // Topic: 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
           const transferLog = receipt.logs.find(log => 
             log.topics && log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
           );
@@ -54,15 +117,23 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
         }
       }
       
+      // Update telemetry if gasless
+      if (isGasless && txHash) {
+        recordGaslessMint({ txHash, tokenId });
+      }
+      
+      // Override any potential stale errors and display final success UI
+      setTxError(null);
+      
       const timer = setTimeout(() => {
-        setSyncStep(3); // Securing Credentials
+        setSyncStep(3); // Finalizing
         setMintedTokenId(tokenId);
         setStep('success');
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [isConfirmed, receipt]);
+  }, [isConfirmed, receipt, isGasless, txHash]);
 
   // Watch for transaction errors post-broadcast
   useEffect(() => {
@@ -90,39 +161,80 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
       return;
     }
 
+    // Capture the current UGF result hash before this submission to prevent cross-contamination
+    lastProcessedHash.current = result?.txHash || null;
+
     setTxError(null);
+    setTxHash('');
+    setMintedTokenId(null);
     setStep('syncing');
     setSyncStep(0);
 
-    try {
-      // Step 0: validation done
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setSyncStep(1); // Requesting signature in wallet
-
-      const hash = await writeContractAsync({
-        ...esgContractConfig,
-        functionName: 'mintCredential',
-        args: [
-          address,
-          formData.companyName,
-          formData.category,
-          formData.description,
-          formData.metric
-        ]
-      });
-
-      setTxHash(hash);
-      setSyncStep(2); // Broadcasting to Base Sepolia
-    } catch (err) {
-      console.error("Wallet mint error:", err);
-      const friendlyMessage = err.message?.includes("User rejected")
-        ? "Transaction rejected by user."
-        : err.message?.includes("insufficient funds")
-        ? "Insufficient gas to execute transaction."
-        : err.shortMessage || err.message || "Transaction failed.";
+    if (isGasless) {
+      try {
+        // Step 0: Preparing Gasless Transaction
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-      setTxError(friendlyMessage);
-      setStep('form');
+        if (!signer) {
+          throw new Error("Ethers signer not loaded. Please ensure your wallet is connected.");
+        }
+        
+        // Step 1: Securing UGF Sponsorship
+        setSyncStep(1);
+        
+        const data = encodeMintData({
+          recipient: address,
+          companyName: formData.companyName,
+          category: formData.category,
+          description: formData.description,
+          metric: formData.metric
+        });
+        
+        openUGF({
+          signer,
+          tx: {
+            to: ESG_CREDENTIAL_ADDRESS,
+            data,
+            value: 0n
+          },
+          destChainId: '84532'
+        });
+      } catch (err) {
+        console.error("UGF Gasless setup error:", err);
+        setTxError(err.message || "Failed to initialize UGF transaction.");
+        setStep('form');
+      }
+    } else {
+      try {
+        // Step 0: validation done
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setSyncStep(1); // Requesting signature in wallet
+
+        const hash = await writeContractAsync({
+          ...esgContractConfig,
+          functionName: 'mintCredential',
+          args: [
+            address,
+            formData.companyName,
+            formData.category,
+            formData.description,
+            formData.metric
+          ]
+        });
+
+        setTxHash(hash);
+        setSyncStep(2); // Broadcasting to Base Sepolia
+      } catch (err) {
+        console.error("Standard mint error:", err);
+        const friendlyMessage = err.message?.includes("User rejected")
+          ? "Transaction rejected by user."
+          : err.message?.includes("insufficient funds")
+          ? "Insufficient gas to execute transaction."
+          : err.shortMessage || err.message || "Transaction failed.";
+          
+        setTxError(friendlyMessage);
+        setStep('form');
+      }
     }
   };
 
@@ -135,7 +247,8 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
       score: formData.score,
       txHash: txHash,
       tokenId: mintedTokenId || '0',
-      timestamp: new Date().toUTCString()
+      timestamp: new Date().toUTCString(),
+      isGasless // Pass gasless flag for showcase item render
     });
     
     // Reset state
@@ -243,6 +356,27 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   />
                 </div>
 
+                {/* Gasless / Sponsored Toggle */}
+                <div className="p-4 rounded-xl border border-cyan-500/10 bg-cyan-950/10 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-semibold text-white">Sponsor Gas (Gasless Mint)</h4>
+                    <p className="text-xs text-slate-400">Zero fee execution powered by Universal Gas Framework</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsGasless(!isGasless)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                      isGasless ? 'bg-cyan-500' : 'bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-[#050816] transition-transform ${
+                        isGasless ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
                 {txError && (
                   <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400 animate-pulse" />
@@ -250,14 +384,20 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   </div>
                 )}
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
                   <button 
                     type="submit" 
                     className="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    Generate ESG Record
+                    {isGasless ? "Generate Gasless ESG Record" : "Generate ESG Record"}
                   </button>
+                  {isGasless && (
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-cyan-400/70 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span>Powered by UGF • Gasless</span>
+                    </div>
+                  )}
                 </div>
               </form>
             )}
@@ -315,9 +455,17 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 animate-bounce">
                   <CheckCircle className="w-8 h-8" />
                 </div>
-                <div>
-                  <h4 className="text-xl font-bold font-display text-cyan-400">ESG Record Created Successfully</h4>
-                  <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
+                <div className="space-y-2">
+                  <h4 className="text-xl font-bold font-display text-cyan-400">
+                    {isGasless ? "Gasless ESG Record Created Successfully" : "ESG Record Created Successfully"}
+                  </h4>
+                  {isGasless && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                      <span>Sponsorship Covered via UGF • No ETH Required</span>
+                    </div>
+                  )}
+                  <p className="text-sm text-slate-400 max-w-xs mx-auto">
                     Your non-transferable soulbound ESG credential NFT has been secured on Base Sepolia.
                   </p>
                 </div>
@@ -344,6 +492,12 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>TIMESTAMP</span>
                     <span className="text-slate-300">{new Date().toUTCString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>SECURITY & GAS</span>
+                    <span className={isGasless ? "text-cyan-400 font-semibold" : "text-slate-300 font-semibold"}>
+                      {isGasless ? "Gasless (Sponsored via UGF)" : "Standard (User Paid Gas)"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>SECURITY STATE</span>

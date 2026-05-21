@@ -90,9 +90,16 @@ export default function Showcase({ recordsList, onVerifyClick }) {
                     <div className={`p-2.5 rounded-xl border ${record.colorClass || 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'}`}>
                       <IconComponent className="w-5 h-5" />
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Ledger Secured</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Ledger Secured</span>
+                      </div>
+                      {record.isGasless && (
+                        <div className="text-[9px] font-mono font-semibold px-2 py-0.5 text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 rounded-md uppercase tracking-wider scale-[0.9] origin-right">
+                          Gasless (UGF)
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -1,6 +1,7 @@
 import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UGFProvider } from '@tychilabs/react-ugf';
 import { config } from '../config/web3';
 
 // TanStack Query client required for Wagmi v2
@@ -25,7 +26,9 @@ export default function Web3Provider({ children }) {
             overlayBlur: 'small', // valid values: 'none' | 'small'
           })}
         >
-          {children}
+          <UGFProvider mode="testnet">
+            {children}
+          </UGFProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
