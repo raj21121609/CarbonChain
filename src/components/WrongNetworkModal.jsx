@@ -1,5 +1,4 @@
-import React from 'react';
-import { useAccount, useChainId, useSwitchChain } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, RefreshCw } from 'lucide-react';

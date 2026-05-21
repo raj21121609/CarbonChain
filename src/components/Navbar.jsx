@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useDisconnect, useSwitchChain } from 'wagmi';
+import { useDisconnect, useSwitchChain } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { Leaf, Wallet, ChevronDown, LogOut, Copy, ExternalLink, RefreshCw } from 'lucide-react';
-import { shortenAddress } from '../web3/contractHelpers';
 
 export default function Navbar({ onOpenSubmitModal }) {
-  const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const [dropdownOpen, setDropdownOpen] = useState(false);

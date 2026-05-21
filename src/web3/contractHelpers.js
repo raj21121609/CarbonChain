@@ -54,7 +54,7 @@ export function prepareGaslessRequest({ from, to, data, nonce }) {
 export async function relayTransaction(req, signature) {
   // In Phase 3, this will send the payload and signature to the CarbonChain Relayer API
   console.log("Broadcasting signed payload to Gasless Forwarder Relayer...", { req, signature });
-  
+
   return new Promise((resolve) => {
     setTimeout(() => {
       const mockTxHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -72,3 +72,8 @@ export function shortenAddress(address) {
   if (!address) return '';
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 }
+
+import ESGCredentialAbi from '../contracts/ESGCredential.json';
+export { ESGCredentialAbi };
+export const ESG_CREDENTIAL_ADDRESS = '0x4132865a8D9364c527Ec94679f640Fa02616Df48';
+

@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Sun, CheckCircle, ArrowUpRight, BarChart3, Recycle, FileCheck } from 'lucide-react';
+import { ShieldCheck, Sun, ArrowUpRight, BarChart3, Recycle, FileCheck } from 'lucide-react';
 
 const PRESET_RECORDS = [
   {

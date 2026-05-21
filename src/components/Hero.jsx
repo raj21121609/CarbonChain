@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';

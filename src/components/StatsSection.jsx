@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Users, Activity, BarChart, HardDrive } from 'lucide-react';
 import WalletStatus from './WalletStatus';

@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, ShieldAlert, Cpu, Database, Send, Clipboard, ExternalLink, Leaf } from 'lucide-react';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { esgContractConfig } from '../web3/mintCredential';
+import { getTxExplorerUrl } from '../web3/chainUtils';
 
 export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
+  const { address, isConnected, chain } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
   const [formData, setFormData] = useState({
     companyName: '',
     category: 'Carbon Offsetting',
@@ -13,48 +19,131 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
 
   const [step, setStep] = useState('form'); // 'form' | 'syncing' | 'success'
   const [syncStep, setSyncStep] = useState(0);
+  const [txError, setTxError] = useState(null);
+  const [txHash, setTxHash] = useState('');
+  const [mintedTokenId, setMintedTokenId] = useState(null);
+
+  const { data: receipt, error: receiptError, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  });
 
   const syncMessages = [
-    { title: "Compiling ESG Metadata", desc: "Computing cryptographic hash of carbon credentials..." },
-    { title: "Verifying Gasless Signature", desc: "Verifying authorization via Universal Gasless Forwarder..." },
-    { title: "Broadcasting Ledger TX", desc: "Broadcasting zero-gas transaction to CarbonChain validators..." },
-    { title: "Committing Block", desc: "Writing immutable record to decentralized ledger..." }
+    { title: "Validating Metadata", desc: "Computing cryptographic hashes of ESG credentials..." },
+    { title: "Requesting Signature", desc: "Please confirm the mint transaction in your browser wallet..." },
+    { title: "Broadcasting to Base Sepolia", desc: "Awaiting block confirmation on the decentralized ledger..." },
+    { title: "Securing Credentials", desc: "Minting soulbound token and writing proof to chain..." }
   ];
 
+  // Watch for block confirmation
   useEffect(() => {
-    let interval;
-    if (step === 'syncing') {
-      setSyncStep(0);
-      interval = setInterval(() => {
-        setSyncStep((prev) => {
-          if (prev >= syncMessages.length - 1) {
-            clearInterval(interval);
-            setTimeout(() => {
-              setStep('success');
-            }, 800);
-            return prev;
+    if (isConfirmed && receipt) {
+      let tokenId = '0';
+      if (receipt.logs && receipt.logs.length > 0) {
+        try {
+          // Find ERC721 Transfer event
+          // Transfer (index_topic_1 address from, index_topic_2 address to, index_topic_3 uint256 tokenId)
+          // Topic: 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+          const transferLog = receipt.logs.find(log => 
+            log.topics && log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+          );
+          if (transferLog && transferLog.topics.length >= 4) {
+            tokenId = parseInt(transferLog.topics[3], 16).toString();
           }
-          return prev + 1;
-        });
-      }, 1500);
-    }
-    return () => clearInterval(interval);
-  }, [step]);
+        } catch (e) {
+          console.warn("Failed to parse tokenId from receipt logs, falling back", e);
+        }
+      }
+      
+      const timer = setTimeout(() => {
+        setSyncStep(3); // Securing Credentials
+        setMintedTokenId(tokenId);
+        setStep('success');
+      }, 500);
 
-  const handleSubmit = (e) => {
+      return () => clearTimeout(timer);
+    }
+  }, [isConfirmed, receipt]);
+
+  // Watch for transaction errors post-broadcast
+  useEffect(() => {
+    if (receiptError) {
+      const timer = setTimeout(() => {
+        setTxError(receiptError.shortMessage || receiptError.message || "Block verification failed.");
+        setStep('form');
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [receiptError]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.companyName || !formData.metric) return;
+    
+    if (!isConnected) {
+      setTxError("Wallet disconnected. Please connect your wallet first.");
+      return;
+    }
+    
+    // Base Sepolia ID is 84532
+    if (chain?.id !== 84532) {
+      setTxError("Incorrect network. Please switch to Base Sepolia to mint credentials.");
+      return;
+    }
+
+    setTxError(null);
     setStep('syncing');
+    setSyncStep(0);
+
+    try {
+      // Step 0: validation done
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setSyncStep(1); // Requesting signature in wallet
+
+      const hash = await writeContractAsync({
+        ...esgContractConfig,
+        functionName: 'mintCredential',
+        args: [
+          address,
+          formData.companyName,
+          formData.category,
+          formData.description,
+          formData.metric
+        ]
+      });
+
+      setTxHash(hash);
+      setSyncStep(2); // Broadcasting to Base Sepolia
+    } catch (err) {
+      console.error("Wallet mint error:", err);
+      const friendlyMessage = err.message?.includes("User rejected")
+        ? "Transaction rejected by user."
+        : err.message?.includes("insufficient funds")
+        ? "Insufficient gas to execute transaction."
+        : err.shortMessage || err.message || "Transaction failed.";
+        
+      setTxError(friendlyMessage);
+      setStep('form');
+    }
   };
 
   const handleDone = () => {
     onSubmitSuccess({
-      ...formData,
-      txHash: '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      companyName: formData.companyName,
+      category: formData.category,
+      metric: formData.metric,
+      description: formData.description,
+      score: formData.score,
+      txHash: txHash,
+      tokenId: mintedTokenId || '0',
       timestamp: new Date().toUTCString()
     });
+    
+    // Reset state
     setStep('form');
     setFormData({ companyName: '', category: 'Carbon Offsetting', metric: '', score: 95, description: '' });
+    setTxError(null);
+    setTxHash('');
+    setMintedTokenId(null);
     onClose();
   };
 
@@ -77,8 +166,9 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
               <h3 className="text-xl font-semibold font-display text-white">Create ESG Ledger Record</h3>
             </div>
             <button 
-              onClick={onClose} 
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              onClick={step === 'syncing' ? null : onClose} 
+              disabled={step === 'syncing'}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <X className="w-5 h-5" />
             </button>
@@ -153,13 +243,20 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   />
                 </div>
 
+                {txError && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400 animate-pulse" />
+                    <span>{txError}</span>
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <button 
                     type="submit" 
                     className="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    Submit Gasless ESG Record
+                    Generate ESG Record
                   </button>
                 </div>
               </form>
@@ -219,24 +316,38 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   <CheckCircle className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold font-display text-white">Record Secured on Chain</h4>
+                  <h4 className="text-xl font-bold font-display text-cyan-400">ESG Record Created Successfully</h4>
                   <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
-                    Your ESG credentials have been successfully hashed and committed to the ledger with gasless transaction relaying.
+                    Your non-transferable soulbound ESG credential NFT has been secured on Base Sepolia.
                   </p>
                 </div>
 
-                <div className="p-4 bg-brand-dark/80 border border-white/5 rounded-xl text-left space-y-2 max-w-sm mx-auto">
+                <div className="p-4 bg-brand-dark/80 border border-white/5 rounded-xl text-left space-y-2 max-w-sm mx-auto relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                  
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>CREDENTIAL ID</span>
+                    <span className="text-white font-semibold font-mono">#{mintedTokenId || '0'}</span>
+                  </div>
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>TRANSACTION HASH</span>
-                    <span className="text-cyan-400 font-mono">0x{Math.random().toString(36).substring(2, 10)}...</span>
+                    <a 
+                      href={getTxExplorerUrl(txHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 font-mono flex items-center gap-1 hover:underline hover:text-cyan-300 transition-colors"
+                    >
+                      {txHash ? `${txHash.slice(0, 8)}...${txHash.slice(-8)}` : '0x...'}
+                      <ExternalLink className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    </a>
                   </div>
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>SECURITY SCHEME</span>
-                    <span className="text-emerald-400">UGF-Immutable-v4</span>
+                    <span>TIMESTAMP</span>
+                    <span className="text-slate-300">{new Date().toUTCString()}</span>
                   </div>
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>GAS COSTS</span>
-                    <span className="text-slate-400 line-through">$0.00 (Gasless)</span>
+                    <span>SECURITY STATE</span>
+                    <span className="text-emerald-400 font-semibold">Soulbound Verified</span>
                   </div>
                 </div>
 
@@ -360,12 +471,13 @@ export function VerifyReceiptModal({ isOpen, onClose, record }) {
             {/* Verification Button */}
             <div className="pt-2">
               <a 
-                href="#"
-                onClick={(e) => { e.preventDefault(); alert("You are viewing the simulated transaction on the CarbonChain testnet ledger explorer!"); }}
+                href={getTxExplorerUrl(mockTxHash)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full py-3.5 border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/5 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4 text-cyan-400" />
-                View on CarbonChain Explorer
+                View on Basescan Explorer
               </a>
             </div>
           </div>

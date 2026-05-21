@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, EyeOff, Server, ShieldCheck, Zap, Layers, Check, ArrowRight } from 'lucide-react';
 

@@ -1,9 +1,7 @@
-import React from 'react';
-import { useAccount, useChainId, useDisconnect, useSwitchChain } from 'wagmi';
+import { useAccount, useDisconnect, useSwitchChain } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Wifi, WifiOff, LogOut, RefreshCw, Cpu } from 'lucide-react';
-import { shortenAddress } from '../web3/contractHelpers';
+import { WifiOff, LogOut, RefreshCw, Cpu } from 'lucide-react';
 
 export default function WalletStatus() {
   const { address, isConnected, isConnecting, chain } = useAccount();
