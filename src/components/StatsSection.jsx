@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Users, Activity, BarChart, HardDrive } from 'lucide-react';
+import WalletStatus from './WalletStatus';
 
 export default function StatsSection() {
   const [recordsCount, setRecordsCount] = useState(1248392);
@@ -145,6 +146,11 @@ export default function StatsSection() {
             </div>
           </div>
 
+        </div>
+
+        {/* Reusable Wallet Status Console Component */}
+        <div className="mt-12 max-w-xl mx-auto">
+          <WalletStatus />
         </div>
 
       </div>

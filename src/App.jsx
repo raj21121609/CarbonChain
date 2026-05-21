@@ -6,6 +6,7 @@ import Showcase from './components/Showcase';
 import StatsSection from './components/StatsSection';
 import Footer from './components/Footer';
 import { SubmitRecordModal, VerifyReceiptModal } from './components/InteractiveDialogs';
+import WrongNetworkModal from './components/WrongNetworkModal';
 
 function App() {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
@@ -86,6 +87,9 @@ function App() {
         }} 
         record={selectedRecord}
       />
+
+      {/* Web3 Network Safety Check Overlay */}
+      <WrongNetworkModal />
 
     </div>
   );

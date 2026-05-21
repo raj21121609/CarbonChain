@@ -1,8 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useAccount } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
 import { ShieldCheck, Cpu, Leaf, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
 
 export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
+  const { isConnected, chain } = useAccount();
+  const isWrongNetwork = isConnected && chain && chain.id !== baseSepolia.id;
+
   return (
     <section id="hero" className="relative min-h-[calc(100vh-80px)] flex items-center py-20 overflow-hidden bg-grid-pattern">
       {/* Background Radial Glow Lights */}
@@ -46,6 +51,23 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
               Gasless ESG infrastructure powered by invisible blockchain transactions. Committing green credentials instantly to an immutable decentralized ledger.
             </motion.p>
           </div>
+
+          {/* Dynamic Wallet Status Onboarding Line */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="flex items-center gap-2 text-xs font-semibold py-2 px-3.5 rounded-xl bg-white/5 border border-white/5 w-fit"
+          >
+            <span className={`w-2 h-2 rounded-full ${isWrongNetwork ? 'bg-rose-500 animate-pulse' : isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
+            <span className={isWrongNetwork ? 'text-rose-400' : isConnected ? 'text-emerald-400' : 'text-amber-400'}>
+              {isWrongNetwork
+                ? 'Unsupported network. Please switch to Base Sepolia.'
+                : isConnected 
+                  ? 'Wallet connected. Ready for ESG verification.' 
+                  : 'Connect your organization wallet to begin.'}
+            </span>
+          </motion.div>
 
           {/* Action Buttons */}
           <motion.div 
