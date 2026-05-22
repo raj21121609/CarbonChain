@@ -146,22 +146,23 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
         >
           {/* Depth Fog / Atmospheric Glow behind the Earth */}
           <div 
-            className="absolute inset-0 rounded-full scale-110 pointer-events-none z-0" 
+            className="absolute inset-0 rounded-full scale-[1.3] pointer-events-none z-0" 
             style={{ background: 'radial-gradient(circle at center, rgba(8,145,178,0.08) 0%, transparent 65%)' }}
           />
           
           {/* Ultra-slow floating animation container */}
           <motion.div
             animate={{
-              y: [-12, 12, -12],
-              rotate: [-1, 1, -1],
+              y: [-24, 24, -24],
+              x: [-8, 8, -8],
+              rotate: [-2, 2, -2],
             }}
             transition={{
-              duration: 20,
+              duration: 15,
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="relative w-full max-w-[650px] lg:max-w-[750px] lg:scale-110 xl:scale-125 aspect-square flex items-center justify-center"
+            className="relative w-full max-w-[700px] lg:max-w-[850px] scale-110 lg:scale-125 xl:scale-[1.4] aspect-square flex items-center justify-center"
           >
             {/* The Cinematic Earth Image */}
             <img 
