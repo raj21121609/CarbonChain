@@ -28,12 +28,12 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
       />
 
       <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        
+
         {/* Left Side: Content */}
         <div className="lg:col-span-6 text-left space-y-10 z-10 pt-10 lg:pt-0">
-          
+
           {/* Animated Announcement Tag */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -45,7 +45,7 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
 
           {/* Heading */}
           <div className="space-y-6">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
@@ -56,8 +56,8 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
                 Invisible blockchain.
               </span>
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
@@ -68,7 +68,7 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
           </div>
 
           {/* Dynamic Wallet Status Onboarding Line */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -78,20 +78,20 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
             <span className={isWrongNetwork ? 'text-rose-400' : isConnected ? 'text-emerald-400' : 'text-amber-400'}>
               {isWrongNetwork
                 ? 'Unsupported network. Switch to Base Sepolia.'
-                : isConnected 
-                  ? 'System connected. Ready for verification.' 
+                : isConnected
+                  ? 'System connected. Ready for verification.'
                   : 'Connect organization wallet to initialize.'}
             </span>
           </motion.div>
 
           {/* Action Buttons */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4, ease: [0.21, 0.47, 0.32, 0.98] }}
             className="flex flex-col sm:flex-row items-stretch sm:items-center gap-5 pt-2"
           >
-            <motion.button 
+            <motion.button
               onClick={onOpenSubmit}
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -105,7 +105,7 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
               </span>
             </motion.button>
 
-            <motion.button 
+            <motion.button
               onClick={onScrollToShowcase}
               whileHover={{ scale: 1.02, y: -2, backgroundColor: "rgba(255,255,255,0.05)" }}
               whileTap={{ scale: 0.98 }}
@@ -116,7 +116,7 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
           </motion.div>
 
           {/* Feature Pills */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
@@ -138,18 +138,18 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
         </div>
 
         {/* Right Side: Cinematic Earth Image */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
           className="lg:col-span-6 relative flex items-center justify-center w-full min-h-[500px]"
         >
           {/* Depth Fog / Atmospheric Glow behind the Earth */}
-          <div 
-            className="absolute inset-0 rounded-full scale-[1.3] pointer-events-none z-0" 
+          <div
+            className="absolute inset-0 rounded-full scale-[1.3] pointer-events-none z-0"
             style={{ background: 'radial-gradient(circle at center, rgba(8,145,178,0.08) 0%, transparent 65%)' }}
           />
-          
+
           {/* Ultra-slow floating animation container */}
           <motion.div
             animate={{
@@ -165,8 +165,8 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
             className="relative w-full max-w-[700px] lg:max-w-[850px] scale-110 lg:scale-125 xl:scale-[1.4] aspect-square flex items-center justify-center"
           >
             {/* The Cinematic Earth Image */}
-            <img 
-              src="/images/earth-cinematic.png" 
+            <img
+              src="/images/earth-cinematic.png"
               alt="Planet-scale ESG Infrastructure"
               className="w-full h-full object-contain z-10 mix-blend-screen opacity-90 drop-shadow-[0_0_50px_rgba(34,211,238,0.1)]"
             />

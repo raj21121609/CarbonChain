@@ -169,7 +169,9 @@ export default function StatsSection() {
 
   // Format helper for numbers
   const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const parts = num.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
   };
 
   return (
@@ -197,7 +199,7 @@ export default function StatsSection() {
                 <span className={`text-4xl sm:text-5xl font-extrabold font-display text-white transition-all duration-500 ${
                   flashRecord ? 'text-emerald-400 scale-105' : ''
                 }`}>
-                  <AnimatedCounter value={recordsCount} format={formatNumber} />
+                  <AnimatedCounter value={recordsCount} format={(v) => formatNumber(Math.round(v))} />
                 </span>
                 <AnimatePresence>
                   {flashRecord && (
