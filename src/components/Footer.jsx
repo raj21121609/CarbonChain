@@ -1,6 +1,6 @@
 import { Leaf } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ currentRoute = '/', onNavigate }) {
   return (
     <footer className="bg-[#050816] border-t border-white/5 py-12">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-left mb-12">
@@ -35,8 +35,24 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Platform</h4>
           <ul className="space-y-2.5 text-xs">
-            <li><a href="#" className="text-slate-500 hover:text-cyan-400 transition-colors">Features</a></li>
-            <li><a href="#" className="text-slate-500 hover:text-cyan-400 transition-colors">Ledger Explorer</a></li>
+            <li>
+              <a 
+                href="/" 
+                onClick={(e) => { e.preventDefault(); onNavigate('/'); }} 
+                className="text-slate-500 hover:text-cyan-400 transition-colors"
+              >
+                Features
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/verify" 
+                onClick={(e) => { e.preventDefault(); onNavigate('/verify'); }} 
+                className="text-slate-500 hover:text-cyan-400 transition-colors"
+              >
+                Ledger Explorer
+              </a>
+            </li>
             <li><a href="#" className="text-slate-500 hover:text-cyan-400 transition-colors">Enterprise Security</a></li>
             <li><a href="#" className="text-slate-500 hover:text-cyan-400 transition-colors">Whitepaper</a></li>
           </ul>

@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\user\\OneDrive\\Desktop\\crypto\\contracts\\ESGCredential.sol": {
-      "lastModificationDate": 1779386715154,
-      "contentHash": "1fd9f8fb2f037d5947092d6173b89a96",
+      "lastModificationDate": 1779397966524,
+      "contentHash": "b7bc8442c95ee330d3abd1e737334d2b",
       "sourceName": "contracts/ESGCredential.sol",
       "solcConfig": {
         "version": "0.8.24",

@@ -18,6 +18,9 @@ contract ESGCredential is ERC721, Ownable {
     // Mapping from token ID to ESG record metadata
     mapping(uint256 => ESGRecord) private _esgRecords;
 
+    // Mapping from owner address to list of ESG Token IDs
+    mapping(address => uint256[]) private _ownerTokens;
+
     // Events
     event ESGCredentialMinted(
         uint256 indexed tokenId,
@@ -58,6 +61,9 @@ contract ESGCredential is ERC721, Ownable {
             timestamp: block.timestamp
         });
 
+        // Index the token ID for the owner
+        _ownerTokens[recipient].push(tokenId);
+
         emit ESGCredentialMinted(
             tokenId,
             recipient,
@@ -68,6 +74,17 @@ contract ESGCredential is ERC721, Ownable {
         );
 
         return tokenId;
+    }
+
+    /**
+     * @dev Retrieve all token IDs owned by a specific wallet address.
+     */
+    function getCredentialsByOwner(address owner)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return _ownerTokens[owner];
     }
 
     /**

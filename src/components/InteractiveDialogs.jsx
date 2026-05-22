@@ -121,6 +121,24 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
       if (isGasless && txHash) {
         recordGaslessMint({ txHash, tokenId });
       }
+
+      // Save to public verification lookup index history in localStorage
+      try {
+        const historyStr = localStorage.getItem('cc_ugf_mint_history') || '[]';
+        let history = [];
+        try { history = JSON.parse(historyStr); } catch (_) {}
+        if (!history.some(item => String(item.tokenId) === String(tokenId))) {
+          history.push({
+            tokenId,
+            recipient: address,
+            txHash,
+            isGasless
+          });
+          localStorage.setItem('cc_ugf_mint_history', JSON.stringify(history));
+        }
+      } catch (err) {
+        console.warn("Failed to write to cc_ugf_mint_history", err);
+      }
       
       // Override any potential stale errors and display final success UI
       setTxError(null);
@@ -133,7 +151,7 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
 
       return () => clearTimeout(timer);
     }
-  }, [isConfirmed, receipt, isGasless, txHash]);
+  }, [isConfirmed, receipt, isGasless, txHash, address]);
 
   // Watch for transaction errors post-broadcast
   useEffect(() => {

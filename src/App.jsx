@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import WhySection from './components/WhySection';
@@ -7,8 +7,47 @@ import StatsSection from './components/StatsSection';
 import Footer from './components/Footer';
 import { SubmitRecordModal, VerifyReceiptModal } from './components/InteractiveDialogs';
 import WrongNetworkModal from './components/WrongNetworkModal';
+import VerificationPage from './pages/VerificationPage';
+
+function useRoute() {
+  const [route, setRoute] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setRoute(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function(...args) {
+      originalPushState.apply(this, args);
+      handleLocationChange();
+    };
+
+    window.history.replaceState = function(...args) {
+      originalReplaceState.apply(this, args);
+      handleLocationChange();
+    };
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, []);
+
+  const navigate = (to) => {
+    window.history.pushState({}, '', to);
+  };
+
+  return [route, navigate];
+}
 
 function App() {
+  const [route, navigate] = useRoute();
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -35,6 +74,8 @@ function App() {
     }
   };
 
+  const isVerifyPage = route.startsWith('/verify');
+
   return (
     <div className="flex flex-col min-h-screen bg-[#050816] text-slate-300 relative">
       
@@ -44,33 +85,41 @@ function App() {
       <div className="absolute bottom-[30%] left-[5%] w-[450px] h-[450px] bg-emerald-500/5 rounded-full blur-[130px] pointer-events-none" />
 
       {/* Navigation */}
-      <Navbar onOpenSubmitModal={() => setSubmitModalOpen(true)} />
+      <Navbar 
+        onOpenSubmitModal={() => setSubmitModalOpen(true)} 
+        currentRoute={route}
+        onNavigate={navigate}
+      />
 
       {/* Core Page Sections */}
       <main className="flex-grow">
-        
-        {/* 1. Hero Section */}
-        <Hero 
-          onOpenSubmit={() => setSubmitModalOpen(true)} 
-          onScrollToShowcase={handleScrollToShowcase} 
-        />
+        {isVerifyPage ? (
+          <VerificationPage route={route} onNavigate={navigate} />
+        ) : (
+          <>
+            {/* 1. Hero Section */}
+            <Hero 
+              onOpenSubmit={() => setSubmitModalOpen(true)} 
+              onScrollToShowcase={handleScrollToShowcase} 
+            />
 
-        {/* 2. Why Section */}
-        <WhySection />
+            {/* 2. Why Section */}
+            <WhySection />
 
-        {/* 3. ESG Record Showcase */}
-        <Showcase 
-          recordsList={userRecords} 
-          onVerifyClick={handleVerifyClick} 
-        />
+            {/* 3. ESG Record Showcase */}
+            <Showcase 
+              recordsList={userRecords} 
+              onVerifyClick={handleVerifyClick} 
+            />
 
-        {/* 4. Global Impact Stats Section */}
-        <StatsSection />
-
+            {/* 4. Global Impact Stats Section */}
+            <StatsSection />
+          </>
+        )}
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer currentRoute={route} onNavigate={navigate} />
 
       {/* Interactive Modals */}
       <SubmitRecordModal 

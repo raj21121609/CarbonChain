@@ -5,7 +5,7 @@ import { useDisconnect, useSwitchChain } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 import { Leaf, Wallet, ChevronDown, LogOut, Copy, ExternalLink, RefreshCw } from 'lucide-react';
 
-export default function Navbar({ onOpenSubmitModal }) {
+export default function Navbar({ onOpenSubmitModal, currentRoute = '/', onNavigate }) {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -17,12 +17,29 @@ export default function Navbar({ onOpenSubmitModal }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isVerifyPage = currentRoute?.startsWith('/verify');
+
+  const handleOpenSubmit = () => {
+    if (isVerifyPage) {
+      onNavigate('/');
+      setTimeout(() => {
+        onOpenSubmitModal();
+      }, 150);
+    } else {
+      onOpenSubmitModal();
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#050816]/75 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2.5 group">
+        <a 
+          href="/" 
+          onClick={(e) => { e.preventDefault(); onNavigate('/'); }} 
+          className="flex items-center gap-2.5 group"
+        >
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all duration-300">
             <Leaf className="w-5.5 h-5.5 text-white transform -rotate-12 group-hover:rotate-0 transition-transform duration-300" />
             <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -34,24 +51,45 @@ export default function Navbar({ onOpenSubmitModal }) {
 
         {/* Links */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
-            Features
-          </a>
-          <a href="#why-section" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
-            Verify
-          </a>
-          <a href="#showcase" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
-            Credentials
-          </a>
-          <a href="#impact" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
-            Global Impact
-          </a>
+          {isVerifyPage ? (
+            <>
+              <a 
+                href="/" 
+                onClick={(e) => { e.preventDefault(); onNavigate('/'); }} 
+                className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2"
+              >
+                Home Landing
+              </a>
+              <span className="text-sm font-semibold text-cyan-400 relative py-2">
+                Public ESG Registry
+              </span>
+            </>
+          ) : (
+            <>
+              <a href="#features" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
+                Features
+              </a>
+              <a 
+                href="/verify" 
+                onClick={(e) => { e.preventDefault(); onNavigate('/verify'); }} 
+                className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2"
+              >
+                Public Registry
+              </a>
+              <a href="#showcase" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
+                Credentials
+              </a>
+              <a href="#impact" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative py-2">
+                Global Impact
+              </a>
+            </>
+          )}
         </nav>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-4 relative">
           <button 
-            onClick={onOpenSubmitModal}
+            onClick={handleOpenSubmit}
             className="hidden sm:inline-flex items-center gap-1.5 px-4.5 py-2.5 text-sm font-semibold text-cyan-400 hover:text-white border border-cyan-500/20 hover:border-cyan-500/40 rounded-xl bg-cyan-500/5 hover:bg-cyan-500/10 active:scale-[0.98] transition-all cursor-pointer"
           >
             Submit Record
