@@ -57,6 +57,27 @@
   100% { transform: translate(-50%, -50%) rotate(0deg); }
 }
 
+@keyframes scan {
+  0%, 100% { top: 0%; opacity: 0.8; }
+  50% { top: 100%; opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes grid-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.3; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
 /* Custom Base Styles */
 body {
   background-color: #050816;
@@ -80,9 +101,24 @@ body {
   background-position: center center;
 }
 
+.bg-grid-pattern-animated {
+  background-image: 
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+  animation: grid-move 25s linear infinite;
+}
+
 .bg-dot-pattern {
   background-image: radial-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+.shimmer-skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite linear;
 }
 
 .glass-card {

@@ -77,9 +77,10 @@ export default function Showcase({ recordsList, onVerifyClick }) {
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass-card glass-card-hover rounded-2xl p-6 border border-white/10 flex flex-col justify-between text-left relative overflow-hidden group"
+                whileHover={{ y: -10, scale: 1.02 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+                className="glass-card rounded-2xl p-6 border border-white/10 flex flex-col justify-between text-left relative overflow-hidden group hover:border-cyan-500/30 transition-colors"
               >
                 {/* Decorative glowing card core */}
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-cyan-500/5 rounded-full blur-xl group-hover:bg-cyan-500/10 transition-all" />
@@ -91,10 +92,14 @@ export default function Showcase({ recordsList, onVerifyClick }) {
                       <IconComponent className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                      <motion.div 
+                        animate={{ boxShadow: ["0px 0px 0px rgba(16,185,129,0)", "0px 0px 10px rgba(16,185,129,0.3)", "0px 0px 0px rgba(16,185,129,0)"] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full"
+                      >
                         <ShieldCheck className="w-3.5 h-3.5" />
                         <span>Ledger Secured</span>
-                      </div>
+                      </motion.div>
                       {record.isGasless && (
                         <div className="text-[9px] font-mono font-semibold px-2 py-0.5 text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 rounded-md uppercase tracking-wider scale-[0.9] origin-right">
                           Gasless (UGF)
@@ -131,13 +136,15 @@ export default function Showcase({ recordsList, onVerifyClick }) {
                     <span>{record.timestamp.split(' ').slice(0,3).join(' ')}</span>
                   </div>
 
-                  <button 
+                  <motion.button 
+                    whileHover={{ scale: 1.02, backgroundColor: "rgba(6, 182, 212, 0.1)", borderColor: "rgba(6, 182, 212, 0.3)" }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => onVerifyClick(record)}
-                    className="w-full py-3 bg-white/5 border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-3 bg-white/5 border border-white/10 text-white font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     Verify Cryptographic Receipt
                     <ArrowUpRight className="w-4 h-4 text-cyan-400" />
-                  </button>
+                  </motion.button>
                 </div>
 
               </motion.div>

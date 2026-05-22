@@ -122,7 +122,9 @@ export default function QRModal({ isOpen, onClose, credential, ownerAddress }) {
 
             {/* QR display block */}
             <div className="flex flex-col items-center justify-center bg-[#03050c] border border-white/5 rounded-xl p-6 mb-6">
-              <div className="relative p-3 bg-white rounded-lg shadow-inner">
+              <div className="relative p-3 bg-white rounded-xl shadow-[0_0_30px_rgba(6,182,212,0.3)] border-2 border-cyan-400/50 overflow-hidden">
+                {/* Laser scan line overlay */}
+                <div className="absolute left-0 right-0 h-1 bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,1)] animate-[scan_2s_ease-in-out_infinite] z-10" />
                 <QRCodeSVG
                   id="qr-svg-code"
                   value={verificationLink}
@@ -160,30 +162,36 @@ export default function QRModal({ isOpen, onClose, credential, ownerAddress }) {
 
             {/* Buttons grid */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleCopyLink}
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold border border-white/10 hover:border-cyan-500/30 bg-white/5 hover:bg-cyan-500/5 text-slate-300 hover:text-white transition-all cursor-pointer"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? 'Copied' : 'Copy URL'}</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleDownloadQR}
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold border border-white/10 hover:border-cyan-500/30 bg-white/5 hover:bg-cyan-500/5 text-slate-300 hover:text-white transition-all cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PNG</span>
-              </button>
+              </motion.button>
             </div>
 
             {shareSupported && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleShare}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold bg-cyan-500 text-[#050816] hover:bg-cyan-400 active:scale-[0.98] transition-all cursor-pointer mb-2"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold bg-cyan-500 text-[#050816] hover:bg-cyan-400 transition-all cursor-pointer mb-2"
               >
                 <Share2 className="w-4 h-4" />
                 <span>Share Verification Link</span>
-              </button>
+              </motion.button>
             )}
 
             <a

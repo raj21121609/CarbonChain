@@ -257,13 +257,13 @@ export default function VerificationPage({ route, onNavigate }) {
               <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Indexing Ledger Records...</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2].map((i) => (
-                  <div key={i} className="glass-card border border-white/5 rounded-2xl p-6 h-60 animate-pulse flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="h-6 w-1/3 bg-white/10 rounded-lg" />
-                      <div className="h-4 w-2/3 bg-white/5 rounded-lg" />
-                      <div className="h-4 w-1/2 bg-white/5 rounded-lg" />
+                  <div key={i} className="glass-card border border-white/5 rounded-2xl p-6 h-60 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="h-6 w-1/3 shimmer-skeleton rounded-lg" />
+                      <div className="h-4 w-2/3 shimmer-skeleton rounded-lg" />
+                      <div className="h-4 w-1/2 shimmer-skeleton rounded-lg" />
                     </div>
-                    <div className="h-10 w-full bg-white/5 rounded-xl" />
+                    <div className="h-10 w-full shimmer-skeleton rounded-xl" />
                   </div>
                 ))}
               </div>
@@ -379,9 +379,24 @@ export default function VerificationPage({ route, onNavigate }) {
                   <span>Onchain Transaction History Timeline</span>
                 </h3>
                 
-                <div className="relative pl-6 border-l border-white/10 space-y-8">
+                <div className="relative pl-6 space-y-8">
+                  {/* Animated vertical timeline line */}
+                  <motion.div 
+                    initial={{ height: 0 }}
+                    whileInView={{ height: "100%" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="absolute left-0 top-0 w-px bg-gradient-to-b from-cyan-500/50 via-cyan-500/20 to-transparent"
+                  />
                   {credentials.map((cred, idx) => (
-                    <div key={cred.tokenId} className="relative">
+                    <motion.div 
+                      key={cred.tokenId} 
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.2, duration: 0.5 }}
+                      className="relative"
+                    >
                       {/* Timeline dot */}
                       <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border border-cyan-500 bg-[#050816] flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.4)]">
                         <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
@@ -410,7 +425,7 @@ export default function VerificationPage({ route, onNavigate }) {
                           <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>

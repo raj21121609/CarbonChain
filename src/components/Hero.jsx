@@ -8,10 +8,24 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
   const isWrongNetwork = isConnected && chain && chain.id !== baseSepolia.id;
 
   return (
-    <section id="hero" className="relative min-h-[calc(100vh-80px)] flex items-center py-20 overflow-hidden bg-grid-pattern">
+    <section id="hero" className="relative min-h-[calc(100vh-80px)] flex items-center py-20 overflow-hidden bg-grid-pattern-animated">
       {/* Background Radial Glow Lights */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse-slow" />
+
+      {/* Slow Moving Animated Ambient Light Orb */}
+      <motion.div
+        animate={{
+          x: [0, 40, -20, 0],
+          y: [0, -30, 20, 0],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        className="absolute top-[30%] left-[40%] w-[350px] h-[350px] bg-indigo-500/5 rounded-full blur-[110px] pointer-events-none"
+      />
 
       <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
         
@@ -75,19 +89,32 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
           >
-            <button 
+            <motion.button 
               onClick={onOpenSubmit}
-              className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/10 hover:shadow-cyan-400/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer text-base"
+              whileHover={{ 
+                scale: 1.03, 
+                boxShadow: "0 0 25px rgba(6,182,212,0.4)" 
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-2 cursor-pointer text-base"
             >
               Submit ESG Record
               <ArrowRight className="w-5 h-5" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
               onClick={onScrollToShowcase}
-              className="px-8 py-4 rounded-xl font-semibold border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/5 text-white active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer text-base"
+              whileHover={{ 
+                scale: 1.03, 
+                borderColor: "rgba(6, 182, 212, 0.5)",
+                backgroundColor: "rgba(6, 182, 212, 0.08)"
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="px-8 py-4 rounded-xl font-semibold border border-white/10 text-white flex items-center justify-center gap-2 cursor-pointer text-base"
             >
               Verify Record
-            </button>
+            </motion.button>
           </motion.div>
 
           {/* Feature Pills */}
@@ -122,10 +149,22 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
             transition={{ duration: 1 }}
             className="relative w-80 h-80 sm:w-96 sm:h-96 rounded-full border border-white/5 bg-brand-dark/20 backdrop-blur-3xl flex items-center justify-center shadow-[0_0_80px_rgba(6,182,212,0.05)]"
           >
-            {/* Spinning Outer Orbit Rings */}
-            <div className="absolute inset-0 rounded-full border border-dashed border-cyan-500/10 animate-spin-slow" />
-            <div className="absolute inset-8 rounded-full border border-dotted border-blue-500/15 animate-spin-reverse" />
-            <div className="absolute inset-16 rounded-full border border-cyan-500/20" />
+            {/* Spinning Outer Orbit Rings using Framer Motion */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 rounded-full border border-dashed border-cyan-500/10" 
+            />
+            <motion.div 
+              animate={{ rotate: -360 }}
+              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-8 rounded-full border border-dotted border-blue-500/15" 
+            />
+            <motion.div 
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-16 rounded-full border border-cyan-500/20" 
+            />
             
             {/* Central Globe Core */}
             <div className="relative w-44 h-44 rounded-full bg-gradient-to-tr from-cyan-950 via-blue-900 to-indigo-950 flex items-center justify-center border border-cyan-500/30 shadow-[0_0_50px_rgba(37,99,235,0.2)]">
@@ -144,7 +183,8 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
               <line x1="80" y1="200" x2="120" y2="120" stroke="rgba(37,99,235,0.2)" strokeWidth="1.5" />
               <line x1="320" y1="200" x2="280" y2="280" stroke="rgba(16,185,129,0.2)" strokeWidth="1.5" />
 
-              <circle cx="200" cy="80" r="4" fill="#06b6d4" className="animate-ping" />
+              {/* Pulsing Energy Nodes with Framer Motion */}
+              <motion.circle cx="200" cy="80" r="4" fill="#06b6d4" animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0.9, 0.4] }} transition={{ duration: 3, repeat: Infinity }} />
               <circle cx="200" cy="80" r="3.5" fill="#22d3ee" />
               <circle cx="120" cy="120" r="3" fill="#3b82f6" />
               <circle cx="280" cy="120" r="3" fill="#10b981" />
@@ -152,16 +192,19 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
               <circle cx="80" cy="200" r="3" fill="#10b981" />
               <circle cx="120" cy="280" r="3.5" fill="#3b82f6" />
               <circle cx="280" cy="280" r="3" fill="#22d3ee" />
-              <circle cx="200" cy="320" r="4" fill="#10b981" className="animate-ping" />
+              <motion.circle cx="200" cy="320" r="4" fill="#10b981" animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0.9, 0.4] }} transition={{ duration: 3.5, repeat: Infinity }} />
               <circle cx="200" cy="320" r="3" fill="#34d399" />
             </svg>
           </motion.div>
 
-          {/* Floating UI Cards */}
+          {/* Floating UI Cards with Framer Motion Parallax float effects */}
           
           {/* Card 1: Gasless Transaction Verified */}
           <motion.div 
-            className="absolute top-2 -left-4 xs:left-0 z-20 glass-card p-3 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[210px] animate-float"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            whileHover={{ y: -15, scale: 1.03, zIndex: 30 }}
+            className="absolute top-2 -left-4 xs:left-0 z-20 glass-card p-3 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[210px] cursor-pointer transition-colors hover:border-cyan-500/30"
           >
             <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -174,7 +217,10 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
 
           {/* Card 2: ESG Record Created */}
           <motion.div 
-            className="absolute bottom-10 -left-6 xs:left-2 z-20 glass-card p-3.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[200px] animate-float-delayed"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            whileHover={{ y: 5, scale: 1.03, zIndex: 30 }}
+            className="absolute bottom-10 -left-6 xs:left-2 z-20 glass-card p-3.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[200px] cursor-pointer transition-colors hover:border-cyan-500/30"
           >
             <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-cyan-400" />
@@ -187,7 +233,10 @@ export default function Hero({ onOpenSubmit, onScrollToShowcase }) {
 
           {/* Card 3: Blockchain Verified */}
           <motion.div 
-            className="absolute top-24 -right-6 xs:right-2 z-20 glass-card p-3.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[190px] animate-float-fast"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            whileHover={{ y: -13, scale: 1.03, zIndex: 30 }}
+            className="absolute top-24 -right-6 xs:right-2 z-20 glass-card p-3.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2.5 max-w-[190px] cursor-pointer transition-colors hover:border-blue-500/30"
           >
             <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
               <Leaf className="w-4 h-4 text-blue-400" />

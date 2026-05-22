@@ -435,33 +435,63 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
                   </div>
                 </div>
 
-                <div className="w-full max-w-sm space-y-4">
+                <div className="relative w-full max-w-sm space-y-6 pl-6 border-l-2 border-white/5">
+                  {/* Animated vertical timeline line overlay */}
+                  <motion.div 
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(syncStep / (syncMessages.length - 1)) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute left-[-2px] top-0 w-[2px] bg-cyan-400"
+                  />
+                  
                   {syncMessages.map((msg, idx) => {
                     const isActive = idx === syncStep;
                     const isCompleted = idx < syncStep;
                     return (
-                      <div 
+                      <motion.div 
                         key={idx} 
-                        className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-300 ${
-                          isActive ? 'bg-white/5 border border-cyan-500/20' : 'opacity-40'
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className={`relative flex items-start gap-4 transition-all duration-300 ${
+                          isActive || isCompleted ? 'opacity-100' : 'opacity-40'
                         }`}
                       >
-                        <div className="mt-0.5">
+                        {/* Timeline Node */}
+                        <div className="absolute -left-[35px] top-1 bg-[#050816]">
                           {isCompleted ? (
-                            <CheckCircle className="w-5 h-5 text-emerald-400" />
+                            <motion.div 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", bounce: 0.6 }}
+                              className="w-5 h-5 rounded-full bg-emerald-500 border border-emerald-400 flex items-center justify-center"
+                            >
+                              <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            </motion.div>
                           ) : isActive ? (
                             <div className="w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
                           ) : (
                             <div className="w-5 h-5 rounded-full border-2 border-white/10" />
                           )}
                         </div>
-                        <div>
+
+                        <div className={`p-3 rounded-xl border w-full ${isActive ? 'bg-white/5 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'border-transparent'}`}>
                           <h4 className={`text-sm font-semibold font-display ${isActive ? 'text-white' : 'text-slate-400'}`}>
                             {msg.title}
                           </h4>
-                          {isActive && <p className="text-xs text-slate-400 mt-1">{msg.desc}</p>}
+                          {isActive && (
+                            <motion.p 
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              className="text-xs text-slate-400 mt-1"
+                            >
+                              {msg.desc}
+                            </motion.p>
+                          )}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -470,9 +500,28 @@ export function SubmitRecordModal({ isOpen, onClose, onSubmitSuccess }) {
 
             {step === 'success' && (
               <div className="py-6 text-center space-y-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 animate-bounce">
-                  <CheckCircle className="w-8 h-8" />
-                </div>
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", bounce: 0.5 }}
+                  className="relative mx-auto w-20 h-20"
+                >
+                  <motion.div 
+                    animate={{ scale: [1, 1.4, 1.8], opacity: [0.8, 0.3, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                    className="absolute inset-0 rounded-full bg-emerald-500/20"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <motion.path
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.6, ease: "easeInOut", delay: 0.2 }}
+                        d="M20 6L9 17l-5-5"
+                      />
+                    </svg>
+                  </div>
+                </motion.div>
                 <div className="space-y-2">
                   <h4 className="text-xl font-bold font-display text-cyan-400">
                     {isGasless ? "Gasless ESG Record Created Successfully" : "ESG Record Created Successfully"}

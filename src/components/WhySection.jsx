@@ -25,11 +25,12 @@ export default function WhySection() {
           
           {/* Traditional ESG Systems */}
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="glass-card p-8 sm:p-10 rounded-2xl border border-white/5 flex flex-col justify-between opacity-80 hover:opacity-150 transition-opacity duration-300"
+            whileHover={{ y: -5 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="glass-card p-8 sm:p-10 rounded-2xl border border-white/5 flex flex-col justify-between opacity-80 hover:opacity-100 hover:border-red-500/10 transition-all duration-300"
           >
             <div className="space-y-6">
               <div className="flex items-center gap-3">
@@ -83,11 +84,12 @@ export default function WhySection() {
 
           {/* CarbonChain */}
           <motion.div 
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="glass-card glass-card-hover p-8 sm:p-10 rounded-2xl border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.05)] flex flex-col justify-between"
+            whileHover={{ y: -10, boxShadow: "0 20px 40px rgba(6,182,212,0.15)" }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+            className="glass-card p-8 sm:p-10 rounded-2xl border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.05)] flex flex-col justify-between transition-colors duration-300 hover:border-cyan-500/40"
           >
             <div className="space-y-6">
               <div className="flex items-center justify-between">

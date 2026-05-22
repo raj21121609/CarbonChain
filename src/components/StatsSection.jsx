@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Users, Activity, BarChart, HardDrive, Terminal } from 'lucide-react';
 import WalletStatus from './WalletStatus';
+import AnimatedCounter from './AnimatedCounter';
 import { getTelemetryMetrics } from '../gasless/sponsorUtils';
 
 function UGFTelemetryCard() {
@@ -118,15 +119,22 @@ function UGFTelemetryCard() {
 
       {/* Logs Terminal */}
       <div className="flex-1 min-h-[140px] bg-black/40 border border-white/5 rounded-xl p-3 font-mono text-[10px] overflow-y-auto space-y-1.5 max-h-[160px] scrollbar-thin">
-        {metrics.logs.map((log, idx) => {
-          const parsed = parseLogPrefix(log);
-          return (
-            <div key={idx} className="leading-relaxed break-all">
-              <span className={parsed.color}>{parsed.prefix}</span>
-              <span className="text-slate-300">{parsed.content}</span>
-            </div>
-          );
-        })}
+        <AnimatePresence initial={false}>
+          {metrics.logs.map((log, idx) => {
+            const parsed = parseLogPrefix(log);
+            return (
+              <motion.div 
+                key={log + idx}
+                initial={{ opacity: 0, x: -10, height: 0 }}
+                animate={{ opacity: 1, x: 0, height: "auto" }}
+                className="leading-relaxed break-all"
+              >
+                <span className={parsed.color}>{parsed.prefix} </span>
+                <span className="text-slate-300">{parsed.content}</span>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -189,7 +197,7 @@ export default function StatsSection() {
                 <span className={`text-4xl sm:text-5xl font-extrabold font-display text-white transition-all duration-500 ${
                   flashRecord ? 'text-emerald-400 scale-105' : ''
                 }`}>
-                  {formatNumber(recordsCount)}
+                  <AnimatedCounter value={recordsCount} format={formatNumber} />
                 </span>
                 <AnimatePresence>
                   {flashRecord && (
@@ -226,7 +234,7 @@ export default function StatsSection() {
                 <span className={`text-4xl sm:text-5xl font-extrabold font-display text-white transition-all duration-500 ${
                   flashCarbon ? 'text-cyan-400 scale-105' : ''
                 }`}>
-                  {formatNumber(carbonReduction.toFixed(2))} <span className="text-lg font-light text-slate-400">MT</span>
+                  <AnimatedCounter value={carbonReduction} format={(v) => formatNumber(v.toFixed(2))} /> <span className="text-lg font-light text-slate-400">MT</span>
                 </span>
                 <AnimatePresence>
                   {flashCarbon && (
@@ -258,7 +266,7 @@ export default function StatsSection() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 font-display mb-2">Active Validator Nodes</p>
               <span className="text-4xl sm:text-5xl font-extrabold font-display text-white">
-                84
+                <AnimatedCounter value={84} format={(v) => Math.round(v).toString()} />
               </span>
             </div>
 
